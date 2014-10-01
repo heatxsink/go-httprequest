@@ -12,6 +12,7 @@ import (
 	"strings"
 	"net/url"
 	"github.com/mreiferson/go-httpclient"
+	"crypto/tls"
 )
 
 type HttpRequest struct {
@@ -26,17 +27,20 @@ type HttpRequest struct {
 
 func NewWithDefaults() (*HttpRequest) {
 	timeout := 10000 * time.Millisecond
-	return New(timeout, timeout, timeout, true, true)
+	return New(timeout, timeout, timeout, true, true, false)
 }
 
-func New(connection_timeout time.Duration, response_header_timeout time.Duration, request_timeout time.Duration, keep_alive_flag bool, compression_flag bool) (*HttpRequest) {
+func New(connection_timeout time.Duration, response_header_timeout time.Duration, request_timeout time.Duration, keep_alive_flag bool, compression_flag bool, skip_tls_verify bool) (*HttpRequest) {
 	transport := &httpclient.Transport {
 		DisableKeepAlives: !keep_alive_flag,
 		DisableCompression: !compression_flag,
 		ConnectTimeout: connection_timeout,
 		ResponseHeaderTimeout: response_header_timeout,
 		RequestTimeout: request_timeout,
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: skip_tls_verify},
 	}
+
+	
 	defer transport.Close()
 	client := &http.Client{ Transport: transport }
 	r := HttpRequest{ Transport: transport, Client: client, ProxyFlag: false, BasicAuthFlag: false, Username: "", Password: "", ProxyUrl: "" }
